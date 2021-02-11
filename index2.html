@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<!-- for reference, see:
+  -- https://dev.to/luispa/lets-try-react-without-nodejs-3a7
+  -- https://reactjs.org/docs/hello-world.html
+  -->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>React Local</title>
+  <script type="application/javascript" src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+  <script type="application/javascript" src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+  <script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+  <script src="https://kit.fontawesome.com/248fbf08f8.js" crossorigin="anonymous"></script>
+
+  <!-- your custom CSS goes here: -->
+  <style>
+    em{font-weight: bolder}
+  </style>
+
+  <!-- Maybe you want to use bootstrap to make it pretty? -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+  <script type="text/babel">
+  // Obtain the root
+  const rootElement = document.getElementById('root')
+
+  class SearchApp extends React.Component {
+    constructor(props) {
+      super(props);
+      //this.handleClick = this.handleClick.bind(this);
+      //this.handleChange = this.handleChange.bind(this);
+      //this.setLanguage = this.setLanguage.bind(this);
+      //this.setDate = this.setDate.bind(this);
+      this.handleChange2 = this.handleChange2.bind(this);
+      this.handleButton = this.handleButton.bind(this);
+      this.handleButtonBack = this.handleButtonBack.bind(this);
+      this.handleSnippet = this.handleSnippet.bind(this);
+      this.state = {
+        clicked : false,
+        searchResults : "",
+        english : false,
+        searchValue : "",
+        date : "",
+        urlmain : "https://ssa-hw2-backend.stevetarzia.com/api/search?query=",
+        offsetval : 0,
+        urlglobal : "",
+        currlimit : 0
+      }
+    }
+    /*
+    setLanguage = () => {
+    this.setState({ english: !this.state.english }, () => {
+        this.handleClick;
+    });
+    }
+
+    setDate(event) {
+      this.setState({date : event.target.value}, () => {console.log(this.state.date);});
+    }
+
+    handleChange(event) {
+    this.setState({searchValue: event.target.value}, () => {console.log(this.state.searchValue);});
+    }
+    */
+
+    handleChange2(event) {
+      let value = event.target.value;
+      const name = event.target.name;
+      if(name == "english") {value = event.target.checked;}
+      this.setState({
+        [name] : value
+      }, () => {
+      let url = this.state.urlmain + this.state.searchValue;
+      if (this.state.english == true) {
+        url += "&language=en"
+      }
+      if (this.state.date != "") {
+        url += "&date=" + this.state.date;
+      }
+      this.setState({urlglobal: url});
+      if (this.state.searchValue != "") {
+      fetch(url)
+        .then(response => response.json())
+        .then(resultObj => this.setState({searchResults: resultObj}))
+        .catch(() => this.setState({searchResults: ""}));}
+      else if (this.state.searchValue == ""){
+        this.setState({searchResults: ""});
+      }}); //this is a NEW LINE
+    }
+
+    handleButton() {
+      //url += "&offset=" + this.state.offsetval.toString();
+      if (this.state.searchResults.total_results > this.state.offsetval + 10) { //Makes sure that we are not going to a next page where there is no data
+      this.setState({offsetval: this.state.offsetval + 10}, () => {
+      fetch(this.state.urlglobal + "&offset=" + this.state.offsetval.toString())
+        .then(response => response.json())
+        .then(resultObj => this.setState({searchResults: resultObj}))
+        .catch(() => this.setState({searchResults: ""}));});
+      }
+    }
+
+    handleButtonBack() {
+      if (this.state.offsetval >= 10) { //Makes sure that we are not going to a next page where there is no data
+      this.setState({offsetval: this.state.offsetval - 10}, () => {
+      fetch(this.state.urlglobal + "&offset=" + this.state.offsetval.toString())
+        .then(response => response.json())
+        .then(resultObj => this.setState({searchResults: resultObj}))
+        .catch(() => this.setState({searchResults: ""}));});
+      }
+    }
+
+    /*
+    handleClick(e) {
+      this.setState({clicked: true});
+      console.log('event');
+      console.log(this.state.english);
+      fetch("https://ssa-hw2-backend.stevetarzia.com/api/search?query=northwestern")
+        .then(response => response.json())
+        .then(resultObj => this.setState({searchResults: resultObj}))
+        .catch(() => this.setState({searchResults: ""}));
+    }
+    */
+    handleSnippet(str) {
+      let snip = str.search(new RegExp (this.state.searchValue, 'i'));
+      let sub = this.state.searchValue.split(" ");
+      let size = 150;
+      let len = str.length;
+      let returnstring = "";
+      if (snip > size & len > (snip + size)) {
+        //no bounds here so act normally
+        returnstring = str.substr(snip-size, 2*size);
+        sub.forEach(item => {
+          var strRegExp = new RegExp(item, 'gi');
+          returnstring = returnstring.replace(strRegExp, '<span id="highlight">'+item+'</span>') + ' ...';
+        });
+        return <div dangerouslySetInnerHTML={{__html: returnstring}} />;
+      }
+      else if (snip <= size & len > (snip + size)) {
+        //case where keyword is at start of the text, just pull first 2*size characters for snippet
+        returnstring = str.substr(0, 2*size);
+        sub.forEach(item => {
+          var strRegExp = new RegExp(item, 'gi');
+          returnstring = returnstring.replace(strRegExp, '<span id="highlight">'+item+'</span>') + ' ...';
+        });
+        return <div dangerouslySetInnerHTML={{__html: returnstring}} />;
+      }
+      else if (snip <= size & len <= (snip + size)) {
+        //scenario of small text, upper and lower bounds so just take entire text from article
+        returnstring = str;
+        sub.forEach(item => {
+          var strRegExp = new RegExp(item, 'gi');
+          returnstring = returnstring.replace(strRegExp, '<span id="highlight">'+item+'</span>') + ' ...';
+        });
+        return <div dangerouslySetInnerHTML={{__html: returnstring}} />;
+      }
+      else if (snip > size & len <= (snip + size)) {
+        //case where keyword is at the end of the text, just pull last 2*size characters for snippet
+        returnstring = str.substr(len - 1 - 2*size,2*size)
+        sub.forEach(item => {
+          var strRegExp = new RegExp(item, 'gi');
+          returnstring = returnstring.replace(strRegExp, '<span id="highlight">'+item+'</span>') + ' ...';
+        });
+        return <div dangerouslySetInnerHTML={{__html: returnstring}} />;
+      }
+    }
+
+    render() {
+      const flattenedResults = JSON.stringify(this.state.searchResults);
+      const clickedString = this.state.clicked.toString();
+      let boop = "";
+      if (this.state.searchResults != "") {
+        boop = this.state.searchResults.articles.map((article, index) => <div key={index} id="contentdiv">
+        <div id="wrapper">
+        <div id="pagetitle"><a href={article.url} id="link">{article.title}</a></div>
+        <div id="pageurl">{article.url}</div>
+        <div id="pagetext">{this.handleSnippet(article.txt)}</div>
+        </div>
+        </div>);
+      }
+
+      return (
+        <div>
+        <form>
+            <div className="browsername"><span id="color1">S</span><span id="color2">h</span><span id="color3">o</span><span id="color4">o</span><span id="color1">g</span><span id="color3">l</span><span id="color2">e</span></div>
+            <div className="aligner">
+            <input type="text" name="searchValue" className="feedback-input" autoComplete="off" placeholder="Search for things" value={this.state.searchValue} onChange={this.handleChange2} required/>
+            <button type="button" className="buttonstyle"><i className="fas fa-search"></i></button></div>
+            <div className="filters">
+            <label className="fontstuff">
+            English Only
+            <input type="checkbox" name="english" id="marginval" value={this.state.english} onChange={this.handleChange2} />
+            </label>
+            <label className="fontstuff">
+            <span>Date (Optional) </span>
+            <input type="date" name="date" id="marginval date" value={this.state.date} onChange={this.handleChange2} />
+            <button className="buttondate">Reset Search</button>
+            </label>
+            </div>
+            </form>
+          <div>{boop}</div>
+          <div className="buttonfriends">
+          <input type="button" value="Back" className="buttony" onClick={this.handleButtonBack} />
+          <input type="button" value="See More" className="buttony" onClick={this.handleButton} />
+          </div>
+          </div>
+      );
+    }
+  }
+
+  // Use the ReactDOM.render to show your component on the browser
+  ReactDOM.render(
+    <SearchApp />,
+    rootElement
+  )
+</script>
+
+<style>
+
+body { background:rgb(30,30,40); }
+form { max-width:700px; margin:200px auto; margin-top: 100px; margin-bottom: 0px; }
+input[type=checkbox] {
+  transform: scale(2);
+}
+#wrapper {
+  padding: 8px;
+}
+#pagetitle {
+font-size: 20px;
+}
+#pageurl {
+  color: lightgrey;
+  font-size: 11px;
+}
+#pagetext {
+  color: white;
+  font-size: 15px;
+  width: 60%;
+}
+#contentdiv {
+  margin-left: 20%;
+}
+#highlight {
+  background-color: #ff7f7f;
+}
+#color1 {
+  color: #FB4747;
+}
+#color2 {
+  color: #fe019a;
+}
+#color3 {
+  color: #4d4dff;
+}
+#color4 {
+  color: #FFEF5B;
+}
+.browsername {
+  color: white;
+  width: 100%;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight:700;
+  font-size: 75px;
+  text-align: center;
+  padding-bottom: 10px;
+}
+.filters {
+  text-align: center;
+}
+#marginval {
+  margin-left: 15px;
+}
+.fontstuff {
+  font-weight: 500;
+  font-size: 16px;
+  margin-left: 10px;
+  margin-right: 20px;
+  color: #CC6666;
+  padding-right: 20px;
+}
+.feedback-input {
+  color:white;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight:500;
+  font-size: 18px;
+  border-radius: 25px;
+  line-height: 35px;
+  background-color: transparent;
+  border:3px solid #CC6666;
+  transition: all 0.3s;
+  padding: 13px;
+  margin-bottom: 30px;
+  width:80%;
+  box-sizing: border-box;
+  outline:0;
+  height: 70px;
+}
+.aligner {
+  text-align: center;
+}
+.feedback-input:focus { border:3px solid #CC4949; }
+textarea {
+  height: 150px;
+  line-height: 150%;
+  resize:vertical;
+}
+.buttony {
+  color: #CC6666;
+  text-decoration: none;
+  background: transparent;
+  border: 3px solid #CC6666;
+  display: inline-block;
+  transition: all 0.5s ease 0s;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px;
+  border-radius: 10%;
+  height: 45px;
+  width: 110px;
+  font-weight: 600;
+  font-size: 18px;
+  text-align: center;
+  vertical-align: center;
+  line-height: .3;
+}
+.buttondate {
+  color: #CC6666;
+  text-decoration: none;
+  background: transparent;
+  border: 3px solid #CC6666;
+  display: inline-block;
+  transition: all 0.5s ease 0s;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 10px;
+  border-radius: 10%;
+  height: 45px;
+  font-weight: 600;
+  font-size: 18px;
+  text-align: center;
+  vertical-align: center;
+  line-height: .3;
+}
+.buttonfriends {
+  text-align: center;
+  padding-top: 20px;
+}
+.buttony:hover {
+  color: rgb(30,30,40);
+  background: #CC4949;
+  border-color: #CC4949;
+  transition: all 0.5s ease 0s;
+}
+.buttony:focus {
+  outline: none;
+}
+.buttonstyle{
+  color: #CC6666;
+  text-decoration: none;
+  background: transparent;
+  padding: 20px;
+  border: 3px solid #CC6666;
+  display: inline-block;
+  transition: all 0.5s ease 0s;
+  margin-left: 20px;
+  border-radius: 50%;
+  height: 70px;
+  width: 70px;
+}
+.buttonstyle:hover {
+  color: rgb(30,30,40);
+  background: #CC4949;
+  border-color: #CC4949;
+  transition: all 0.5s ease 0s;
+}
+.buttonstyle:focus {
+  outline: none;
+}
+</style>
+</body>
+
+</html>
